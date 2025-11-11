@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Port                 string
-	DBPath               string
+	DatabaseUrl               string
 	JWTSecret            string
 	JWTAccessExpiration  string
 	JWTRefreshExpiration string
@@ -19,7 +19,7 @@ func LoadConfig() (*Config, error) {
 
 	return &Config{
 		Port: getEnv("PORT", "8080"),
-		DBPath: getEnv("DB_PATH", "./todo.db"),
+		DatabaseUrl: getEnv("DATABASE_URL", ""),
 		JWTSecret: getEnv("JWT_SECRET", "super-secret-key"),
 		JWTAccessExpiration: getEnv("JWT_ACCESS_EXPIRATION", "1h"),
 		JWTRefreshExpiration: getEnv("JWT_REFRESH_EXPIRATION", "7d"),

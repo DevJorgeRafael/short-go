@@ -22,7 +22,7 @@ func main() {
 		log.Fatal("Error cargando config:", err)
 	}
 
-	db, err := config.InitDatabase(cfg.DBPath)
+	db, err := config.InitDatabase(cfg.DatabaseUrl)
 	if err != nil {
 		log.Fatal("Error inicializando base de datos:", err)
 	}
