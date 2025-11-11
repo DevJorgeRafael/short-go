@@ -1,4 +1,4 @@
-module go-task-easy-list
+module short-go
 
 go 1.25.3
 

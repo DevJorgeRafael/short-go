@@ -1,6 +1,6 @@
 package repository
 
-import "go-task-easy-list/internal/tasks/domain/model"
+import "short-go/internal/tasks/domain/model"
 
 type TaskRepository interface {
 	Create(task *model.Task) error

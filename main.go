@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"go-task-easy-list/config"
-	"go-task-easy-list/internal/shared/infrastructure"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"short-go/config"
+	"short-go/internal/shared/infrastructure"
 	"syscall"
 	"time"
 
@@ -60,16 +60,16 @@ func main() {
 func gracefulShutdown(server *http.Server) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-	
+
 	<-quit
 	log.Println("Apagando servidor...")
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	
+
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatal("Error al apagar servidor:", err)
 	}
-	
+
 	log.Println("Servidor detenido correctamente")
 }

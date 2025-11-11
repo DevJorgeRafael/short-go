@@ -2,8 +2,8 @@ package service
 
 import (
 	"errors"
-	"go-task-easy-list/internal/tasks/domain/model"
-	"go-task-easy-list/internal/tasks/domain/repository"
+	"short-go/internal/tasks/domain/model"
+	"short-go/internal/tasks/domain/repository"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,16 +40,16 @@ func (s *TaskService) CreateTask(title, description string, statusID, priorityID
 	}
 
 	newTask := &model.Task{
-		ID: uuid.New().String(),
-		UserID: userID,
-		Title: title,
+		ID:          uuid.New().String(),
+		UserID:      userID,
+		Title:       title,
 		Description: description,
-		StatusID: statusID,
-		PriorityID: priorityID,
-		StartsAt: startsAt,
-		DueDate: dueDate,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		StatusID:    statusID,
+		PriorityID:  priorityID,
+		StartsAt:    startsAt,
+		DueDate:     dueDate,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	if err := s.taskRepo.Create(newTask); err != nil {
@@ -99,17 +99,17 @@ func (s *TaskService) UpdateTask(updatedTask *model.Task, userID string) (*model
 	}
 
 	taskResponse := &model.Task{
-		ID:        existingTask.ID,
-		UserID:    existingTask.UserID,
-		Title:     updatedTask.Title,
+		ID:          existingTask.ID,
+		UserID:      existingTask.UserID,
+		Title:       updatedTask.Title,
 		Description: updatedTask.Description,
-		StatusID:  updatedTask.StatusID,
-		PriorityID: updatedTask.PriorityID,
-		StartsAt:  updatedTask.StartsAt,
-		DueDate:   updatedTask.DueDate,
+		StatusID:    updatedTask.StatusID,
+		PriorityID:  updatedTask.PriorityID,
+		StartsAt:    updatedTask.StartsAt,
+		DueDate:     updatedTask.DueDate,
 		CompletedAt: updatedTask.CompletedAt,
-		CreatedAt: existingTask.CreatedAt,
-		UpdatedAt: time.Now(),
+		CreatedAt:   existingTask.CreatedAt,
+		UpdatedAt:   time.Now(),
 	}
 
 	if err := s.taskRepo.Update(taskResponse); err != nil {

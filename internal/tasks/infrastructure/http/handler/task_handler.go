@@ -2,12 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	sharedContext "go-task-easy-list/internal/shared/context"
-	sharedhttp "go-task-easy-list/internal/shared/http"
-	format "go-task-easy-list/internal/shared/http/utils"
-	sharedValidation "go-task-easy-list/internal/shared/validation"
-	"go-task-easy-list/internal/tasks/application/service"
-	"go-task-easy-list/internal/tasks/domain/model"
+	sharedContext "short-go/internal/shared/context"
+	sharedhttp "short-go/internal/shared/http"
+	format "short-go/internal/shared/http/utils"
+	sharedValidation "short-go/internal/shared/validation"
+	"short-go/internal/tasks/application/service"
+	"short-go/internal/tasks/domain/model"
 	"net/http"
 	"time"
 

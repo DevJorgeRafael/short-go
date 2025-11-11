@@ -1,8 +1,8 @@
 package gorm
 
 import (
-	"go-task-easy-list/internal/auth/domain/model"
-	"go-task-easy-list/internal/auth/domain/repository"
+	"short-go/internal/auth/domain/model"
+	"short-go/internal/auth/domain/repository"
 
 	"gorm.io/gorm"
 )

@@ -1,7 +1,7 @@
 package gorm
 
 import (
-	"go-task-easy-list/internal/tasks/domain/model"
+	"short-go/internal/tasks/domain/model"
 	"time"
 
 	"gorm.io/gorm"

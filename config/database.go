@@ -1,7 +1,7 @@
 package config
 
 import (
-	authGormModels "go-task-easy-list/internal/auth/infrastructure/persistence/gorm"
+	authGormModels "short-go/internal/auth/infrastructure/persistence/gorm"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

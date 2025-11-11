@@ -1,8 +1,8 @@
 package gorm
 
 import (
-	"go-task-easy-list/internal/auth/domain/model"
-	"go-task-easy-list/internal/auth/domain/repository"
+	"short-go/internal/auth/domain/model"
+	"short-go/internal/auth/domain/repository"
 	"time"
 
 	"gorm.io/gorm"
@@ -97,11 +97,11 @@ func (r *SessionRepositoryGorm) FindByID(id string) (*model.Session, error) {
 	}
 
 	return &model.Session{
-		ID: sessionModel.ID,
-		UserID: sessionModel.UserID,
+		ID:           sessionModel.ID,
+		UserID:       sessionModel.UserID,
 		RefreshToken: sessionModel.RefreshToken,
-		ExpiresAt: sessionModel.ExpiresAt,
-		CreatedAt: sessionModel.CreatedAt,
+		ExpiresAt:    sessionModel.ExpiresAt,
+		CreatedAt:    sessionModel.CreatedAt,
 	}, nil
 }
 

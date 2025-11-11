@@ -2,23 +2,23 @@ package middleware
 
 import (
 	"context"
-	"go-task-easy-list/internal/auth/domain/repository"
-	sharedhttp "go-task-easy-list/internal/shared/http"
-	sharedContext "go-task-easy-list/internal/shared/context"
 	"net/http"
+	"short-go/internal/auth/domain/repository"
+	sharedContext "short-go/internal/shared/context"
+	sharedhttp "short-go/internal/shared/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthMiddleware struct {
-	jwtSecret string
+	jwtSecret   string
 	sessionRepo repository.SessionRepository
 }
 
 func NewAuthMiddleware(jwtSecret string, sessionRepo repository.SessionRepository) *AuthMiddleware {
 	return &AuthMiddleware{
-		jwtSecret: jwtSecret,
+		jwtSecret:   jwtSecret,
 		sessionRepo: sessionRepo,
 	}
 }

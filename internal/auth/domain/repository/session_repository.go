@@ -1,6 +1,6 @@
 package repository
 
-import "go-task-easy-list/internal/auth/domain/model"
+import "short-go/internal/auth/domain/model"
 
 type SessionRepository interface {
 	Create(session *model.Session) error

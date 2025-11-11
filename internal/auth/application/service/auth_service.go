@@ -2,9 +2,9 @@ package service
 
 import (
 	"errors"
-	"go-task-easy-list/internal/auth/domain/model"
-	"go-task-easy-list/internal/auth/domain/repository"
 	"regexp"
+	"short-go/internal/auth/domain/model"
+	"short-go/internal/auth/domain/repository"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,24 +14,24 @@ import (
 
 // Errores del dominio
 var (
-	ErrInvalidEmail = errors.New("email inválido")
-	ErrEmailExists = errors.New("el email ya está registrado")
-	ErrInvalidPassword = errors.New("la contraseña debe tener al menos 8 caracteres")
-	ErrUserNotFound = errors.New("usuario no encontrado")
+	ErrInvalidEmail       = errors.New("email inválido")
+	ErrEmailExists        = errors.New("el email ya está registrado")
+	ErrInvalidPassword    = errors.New("la contraseña debe tener al menos 8 caracteres")
+	ErrUserNotFound       = errors.New("usuario no encontrado")
 	ErrInvalidCredentials = errors.New("credenciales inválidas")
 )
 
 type AuthService struct {
-	userRepo   repository.UserRepository
+	userRepo    repository.UserRepository
 	sessionRepo repository.SessionRepository
-	jwtSecret  string
+	jwtSecret   string
 }
 
 func NewAuthService(userRepo repository.UserRepository, sessionRepo repository.SessionRepository, jwtSecret string) *AuthService {
 	return &AuthService{
-		userRepo:  userRepo,
+		userRepo:    userRepo,
 		sessionRepo: sessionRepo,
-		jwtSecret: jwtSecret,
+		jwtSecret:   jwtSecret,
 	}
 }
 
@@ -58,11 +58,11 @@ func (s *AuthService) Register(email, password, name string) (*model.User, error
 
 	// 3. Crear user
 	user := &model.User{
-		ID: uuid.New().String(),
-		Email: email,
-		Password: string(hashedPassword),
-		Name: name,
-		IsActive: true,
+		ID:        uuid.New().String(),
+		Email:     email,
+		Password:  string(hashedPassword),
+		Name:      name,
+		IsActive:  true,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -138,7 +138,7 @@ func (s *AuthService) Logout(userID string) error {
 }
 
 func (s *AuthService) RefreshToken(refreshToken string) (newAccessToken string, err error) {
-	session ,err := s.sessionRepo.FindByRefreshToken(refreshToken)
+	session, err := s.sessionRepo.FindByRefreshToken(refreshToken)
 	if err != nil {
 		return "", errors.New("refresh token inválido")
 	}
@@ -166,12 +166,12 @@ func (s *AuthService) GetActiveSessions(userId string) ([]*model.Session, error)
 }
 
 // --------------------- Helpers ---------------------
-func (s *AuthService) generateAccessToken(userID, email string) (string ,error) {
+func (s *AuthService) generateAccessToken(userID, email string) (string, error) {
 	claims := jwt.MapClaims{
 		"userId": userID,
-		"email": email,
-		"exp": time.Now().Add(1 * time.Hour).Unix(),
-		"iat": time.Now().Unix(),
+		"email":  email,
+		"exp":    time.Now().Add(1 * time.Hour).Unix(),
+		"iat":    time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

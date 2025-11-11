@@ -1,10 +1,10 @@
 package config
 
 import (
-	"go-task-easy-list/internal/shared/infrastructure/middleware"
-	"go-task-easy-list/internal/tasks/application/service"
-	"go-task-easy-list/internal/tasks/infrastructure/http/handler"
-	gormRepo "go-task-easy-list/internal/tasks/infrastructure/persistence/gorm"
+	"short-go/internal/shared/infrastructure/middleware"
+	"short-go/internal/tasks/application/service"
+	"short-go/internal/tasks/infrastructure/http/handler"
+	gormRepo "short-go/internal/tasks/infrastructure/persistence/gorm"
 
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"

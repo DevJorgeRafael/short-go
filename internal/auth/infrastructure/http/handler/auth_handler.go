@@ -2,12 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	format "go-task-easy-list/internal/shared/http/utils"
-	"go-task-easy-list/internal/auth/application/service"
-	sharedhttp "go-task-easy-list/internal/shared/http"
-	sharedContext "go-task-easy-list/internal/shared/context"
-	sharedValidation "go-task-easy-list/internal/shared/validation"
 	"net/http"
+	"short-go/internal/auth/application/service"
+	sharedContext "short-go/internal/shared/context"
+	sharedhttp "short-go/internal/shared/http"
+	format "short-go/internal/shared/http/utils"
+	sharedValidation "short-go/internal/shared/validation"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -108,7 +108,6 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	sharedhttp.SuccessResponse(w, http.StatusOK, map[string]string{"message": "Sesión cerrada exitosamente"})
 }
-
 
 // ---------------------------- Refresh Token ---------------------------- //
 type RefreshRequest struct {
