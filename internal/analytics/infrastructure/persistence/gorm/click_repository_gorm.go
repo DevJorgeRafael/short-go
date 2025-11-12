@@ -75,7 +75,7 @@ func (r *ClickRepositoryGorm) GetTopReferrers(linkCode string, limit int) ([]mod
 
 	err := r.db.Model(&ClickModel{}).
 			Select("referrer, COUNT(*) as count").
-			Where("link_code = ?", linkCode).
+			Where("link_code = ? AND referrer IS NOT NULL AND referrer <>''", linkCode).
 			Group("referrer").
 			Order("count DESC").
 			Limit(limit).
@@ -87,7 +87,6 @@ func (r *ClickRepositoryGorm) GetTopReferrers(linkCode string, limit int) ([]mod
 // O un método maestro que traiga todas las estadísticas juntas
 func (r *ClickRepositoryGorm) GetLinkStats(linkCode string) (*model.LinkStats, error) {
 	stats := &model.LinkStats{}
-
 	var err error
 
 	stats.TotalClicks, err = r.CountTotal(linkCode)
@@ -110,5 +109,21 @@ func (r *ClickRepositoryGorm) GetLinkStats(linkCode string) (*model.LinkStats, e
 		return nil, err
 	}
 
+	stats.LastClicks, err = r.GetLastClicks(linkCode, 10)
+	if err != nil {
+		return nil, err
+	}
+
 	return stats, nil
+}
+
+func (r *ClickRepositoryGorm) GetLastClicks(lickCode string, limit int) ([]model.Click, error) {
+	var clicks []model.Click
+	err := r.db.Model(&ClickModel{}).
+		Where("link_code = ?", lickCode).
+		Order("clicked_at DESC").
+		Limit(limit).
+		Scan(&clicks).Error
+
+	return clicks, err
 }

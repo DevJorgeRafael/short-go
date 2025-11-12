@@ -1,11 +1,14 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
+	"net/http"
 	analyticsModel "short-go/internal/analytics/domain/model"
 	analyticsRepo "short-go/internal/analytics/domain/repository"
 	shortLinkRepo "short-go/internal/short-links/domain/repository"
+	"strings"
 	"time"
 )
 
@@ -59,7 +62,10 @@ func (s *AnalyticsService) TrackClick(code, ip, userAgen, referrer string) {
 
 func (s *AnalyticsService) processClicks() {
 	for click := range s.clickChannel {
-		// Esto se ejecuta en segundo plano
+		if click.CountryCode == "XX" {
+			click.CountryCode = s.resolveCountryCode(click.IPAddress)
+		}
+
 		if err := s.clickRepo.Save(click); err != nil {
 			log.Printf("Error saving click: %v", err)
 		}
@@ -87,4 +93,35 @@ func (s *AnalyticsService) GetStats(code string, managementToken string, userID 
 	}
 
 	return s.clickRepo.GetLinkStats(code)
+}
+
+
+// ---------------- FUNCIONES AUXILIARES  ---------------
+func (s *AnalyticsService) resolveCountryCode(ip string) string {
+	if strings.Contains(ip, "127.0.0.1") || strings.Contains(ip, "::1") {
+		return "EC"
+	}
+
+	client := http.Client{Timeout: 2 * time.Second}
+	url := "http://ip-api.com/json/" + ip + "?fields=countryCode"
+	
+	resp, err := client.Get(url)
+	if err != nil {
+		return "XX" //Error de red
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		CountryCode string `json:"countryCode"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "XX" //Error de parseo
+	}
+
+	if result.CountryCode == "" {
+		return "XX" //No se encontró el país
+	}
+
+	return result.CountryCode
 }

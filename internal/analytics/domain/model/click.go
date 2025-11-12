@@ -34,6 +34,6 @@ type CountryStat struct {
 
 // ReferrerStat agrupa por fuetne de tráfico
 type ReferrerStat struct {
-	Referer string `json:"referer"`
+	Referrer string `json:"referrer"`
 	Count   int64  `json:"count"`
 }

@@ -110,14 +110,12 @@ func (h *ShortLinkHandler) Redirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Redirigiendo al enlace original:", shortLink.OriginalURL)
-
 	// Extrae los metadatos básisocs
 	ip := r.RemoteAddr  // Nota: En producción, usa r.Header.Get("X-Forwarded-For")
 	userAgent := r.UserAgent()
-	referer := r.Referer()
+	referrer := r.Referer()
 
-	h.analyticsService.TrackClick(code, ip, userAgent, referer)
+	h.analyticsService.TrackClick(code, ip, userAgent, referrer)
 
 	http.Redirect(w, r, shortLink.OriginalURL, http.StatusFound)
 }
