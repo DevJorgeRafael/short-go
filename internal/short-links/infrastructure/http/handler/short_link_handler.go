@@ -34,11 +34,12 @@ type ShortLinkRequest struct {
 }
 
 type ShortLinkResponse struct {
-	ShortUrl        string  `json:"shortUrl"`
-	OriginalUrl     string  `json:"originalUrl"`
-	StatsUrl        string  `json:"statsUrl"`
-	ExpiresAt       string  `json:"expiresAt,omitempty"`
-	UserID          *string `json:"userId,omitempty"`
+	ShortUrl    string  `json:"shortUrl"`
+	OriginalUrl string  `json:"originalUrl"`
+	StatsUrl    string  `json:"statsUrl"`
+	QrUrl       string  `json:"qrUrl,omitempty"`
+	ExpiresAt   string  `json:"expiresAt,omitempty"`
+	UserID      *string `json:"userId,omitempty"`
 }
 
 // CreateShortLink - POST /api/short-links
@@ -74,16 +75,18 @@ func (h *ShortLinkHandler) CreateShortLink(w http.ResponseWriter, r *http.Reques
 	}
 
 	fullShortUrl := fmt.Sprintf("%s/%s", baseUrl, shortLink.Code)
+	fullQrUrl := fmt.Sprintf("%s/api/qr/%s", baseUrl, shortLink.Code)
 
-	// Estructura: [Base]/api/stats/[Code]?token=[Token]
+	// Estructura: <Base>/api/stats/<Code>?token=<Token>
 	fullStatsUrl := fmt.Sprintf("%s/api/stats/%s?token=%s", baseUrl, shortLink.Code, shortLink.ManagementToken)
 
 	resp := ShortLinkResponse{
-		ShortUrl:        fullShortUrl,
-		OriginalUrl:     shortLink.OriginalURL,
-		StatsUrl:        fullStatsUrl,
-		ExpiresAt:       shortLink.ExpiresAt.Format(time.RFC3339),
-		UserID:          shortLink.UserID,
+		ShortUrl:    fullShortUrl,
+		OriginalUrl: shortLink.OriginalURL,
+		StatsUrl:    fullStatsUrl,
+		QrUrl:       fullQrUrl,
+		ExpiresAt:   shortLink.ExpiresAt.Format(time.RFC3339),
+		UserID:      shortLink.UserID,
 	}
 
 	sharedhttp.SuccessResponse(w, http.StatusCreated, resp)
