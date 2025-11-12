@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"short-go/config"
+	analyticsService "short-go/internal/analytics/application/service"
 	sharedContext "short-go/internal/shared/context"
 	sharedhttp "short-go/internal/shared/http"
 	format "short-go/internal/shared/http/utils"
@@ -12,18 +13,25 @@ import (
 	"short-go/internal/short-links/application/service"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 )
 
 type ShortLinkHandler struct {
 	shortLinkService *service.ShortLinkService
+	analyticsService *analyticsService.AnalyticsService
 	validator        *validator.Validate
 	config           *config.Config
 }
 
-func NewShortLinkHandler(shortLinkService *service.ShortLinkService, cfg *config.Config) *ShortLinkHandler {
+func NewShortLinkHandler(
+	shortLinkService *service.ShortLinkService, 
+	analyticsService *analyticsService.AnalyticsService, 
+	cfg *config.Config,
+) *ShortLinkHandler {
 	return &ShortLinkHandler{
 		shortLinkService: shortLinkService,
+		analyticsService: analyticsService,
 		validator:        sharedValidation.NewValidator(),
 		config:           cfg,
 	}
@@ -90,4 +98,26 @@ func (h *ShortLinkHandler) CreateShortLink(w http.ResponseWriter, r *http.Reques
 	}
 
 	sharedhttp.SuccessResponse(w, http.StatusCreated, resp)
+}
+
+// Redirect - GET /{code}
+func (h *ShortLinkHandler) Redirect(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+
+	shortLink, err := h.shortLinkService.GetShortLinkByCode(code)
+	if err != nil {
+		sharedhttp.ErrorResponse(w, http.StatusNotFound, "Enlace no encontrado")
+		return
+	}
+
+	fmt.Println("Redirigiendo al enlace original:", shortLink.OriginalURL)
+
+	// Extrae los metadatos básisocs
+	ip := r.RemoteAddr  // Nota: En producción, usa r.Header.Get("X-Forwarded-For")
+	userAgent := r.UserAgent()
+	referer := r.Referer()
+
+	h.analyticsService.TrackClick(code, ip, userAgent, referer)
+
+	http.Redirect(w, r, shortLink.OriginalURL, http.StatusFound)
 }

@@ -17,7 +17,7 @@ func NewShortLinkRepository(db *gorm.DB) *ShortLinkRepositoryGorm {
 func (r *ShortLinkRepositoryGorm) Create(shortLink *model.ShortLink) error {
 	shortLinkModel := &ShortLinkModel{
 		Code: shortLink.Code,
-		OriginalURL: shortLink.Code,
+		OriginalURL: shortLink.OriginalURL,
 		ManagementToken: &shortLink.ManagementToken,
 		ExpiresAt: &shortLink.ExpiresAt,
 		CreatedAt: shortLink.CreatedAt,

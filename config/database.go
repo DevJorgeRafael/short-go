@@ -2,8 +2,8 @@ package config
 
 import (
 	authGormModels "short-go/internal/auth/infrastructure/persistence/gorm"
-	shortenerGormModels "short-go/internal/short-links/infrastructure/persistence/gorm"
-
+	shortLinksGormModels "short-go/internal/short-links/infrastructure/persistence/gorm"
+	analyticsGormModels "short-go/internal/analytics/infrastructure/persistence/gorm"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -23,7 +23,9 @@ func InitDatabase(dns string) (*gorm.DB, error) {
 		&authGormModels.UserModel{},
 		&authGormModels.SessionModel{},
 
-		&shortenerGormModels.ShortLinkModel{},
+		&shortLinksGormModels.ShortLinkModel{},
+
+		&analyticsGormModels.ClickModel{},
 	); err != nil {
 		return nil, err
 	}

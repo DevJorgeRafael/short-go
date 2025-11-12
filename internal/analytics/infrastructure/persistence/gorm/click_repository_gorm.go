@@ -46,9 +46,9 @@ func (r *ClickRepositoryGorm) GetClicksByDate(linkCode string) ([]model.DailySta
 	var stats []model.DailyStat
 
 	err := r.db.Model(&ClickModel{}).
-			Select("TO_CHAR(clicked_at, 'YYYY-MM-DD') as date, COUTN(*) as count").
+			Select("TO_CHAR(clicked_at, 'YYYY-MM-DD') as date, COUNT(*) as count").
 			Where("link_code = ?", linkCode).
-			Group("TO_CHAR(clicked_at, 'YYY-MM-DD')").
+			Group("TO_CHAR(clicked_at, 'YYYY-MM-DD')").
 			Order("date ASC").
 			Limit(30).
 			Scan(&stats).Error

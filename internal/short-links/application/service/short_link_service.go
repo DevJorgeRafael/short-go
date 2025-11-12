@@ -50,6 +50,14 @@ func (s *ShortLinkService) CreateShortLink(originalURL string, userID *string) (
 	return newShortLink, nil
 }
 
+func (s *ShortLinkService) GetShortLinkByCode(code string) (*model.ShortLink, error) {
+	shortLink, err := s.shortLinkRepo.FindByCode(code)
+	if err != nil {
+		return nil, ErrShortLinkNotFound
+	}
+	return shortLink, nil
+}
+
 // ------------------------------ HELPERS -----------------------------------
 func generateRandomString(length int) string {
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
