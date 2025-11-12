@@ -29,7 +29,7 @@ func main() {
 	log.Println("Base de datos conectada")
 
 	// Dependency Injection Container
-	container := infrastructure.NewContainer(db, cfg.JWTSecret)
+	container := infrastructure.NewContainer(db, cfg)
 
 	r := chi.NewRouter()
 	// r.Use(middleware.Logger)
@@ -51,7 +51,7 @@ func main() {
 
 	go gracefulShutdown(server)
 
-	log.Printf("Servidor escuchando en http://localhost%s\n", addr)
+	log.Printf("Servidor escuchando en %s\n", cfg.Domain+addr)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal("Error del servidor:", err)
 	}

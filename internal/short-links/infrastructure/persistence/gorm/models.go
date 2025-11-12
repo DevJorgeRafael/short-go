@@ -3,16 +3,15 @@ package gorm
 import (
 	"time"
 
-	"github.com/google/uuid"
 	authGormModels "short-go/internal/auth/infrastructure/persistence/gorm"
 )
 
 type ShortLinkModel struct {
-	ID string `gorm:"primaryKey;type:text"`
+	Code string `gorm:"primaryKey;size:32"`
 	OriginalURL string `gorm:"not null"`
 
 	// Clave de la lógica anónima/autenticada
-	UserID *uuid.UUID `gorm:"type:uuid;index"`
+	UserID *string `gorm:"index"`
 
 	ManagementToken *string `gorm:"type:text;uniqueIndex"`
 

@@ -2,7 +2,7 @@ package gorm
 
 import (
 	"short-go/internal/tasks/domain/model"
-	"time"
+	derefUtils "short-go/internal/shared/http/utils"
 
 	"gorm.io/gorm"
 )
@@ -52,9 +52,9 @@ func (r *TaskRepositoryGorm) FindByUserID(userID string) ([]*model.Task, error) 
 			StatusID:  tm.StatusID,
 			PriorityID: tm.PriorityID,
 			Description: tm.Description,
-			StartsAt:  derefTime(tm.StartsAt),
-			DueDate:   derefTime(tm.DueDate),
-			CompletedAt: derefTime(tm.CompletedAt),
+			StartsAt:  derefUtils.DerefTime(tm.StartsAt),
+			DueDate:   derefUtils.DerefTime(tm.DueDate),
+			CompletedAt: derefUtils.DerefTime(tm.CompletedAt),
 			CreatedAt: tm.CreatedAt,
 			UpdatedAt: tm.UpdatedAt,
 		}
@@ -74,9 +74,9 @@ func (r *TaskRepositoryGorm) FindByID(id string) (*model.Task, error) {
 		UserID:    taskModel.UserID,
 		Title:     taskModel.Title,
 		Description: taskModel.Description,
-		StartsAt:  derefTime(taskModel.StartsAt),
-		DueDate:   derefTime(taskModel.DueDate),
-		CompletedAt: derefTime(taskModel.CompletedAt),
+		StartsAt:  derefUtils.DerefTime(taskModel.StartsAt),
+		DueDate:   derefUtils.DerefTime(taskModel.DueDate),
+		CompletedAt: derefUtils.DerefTime(taskModel.CompletedAt),
 		CreatedAt: taskModel.CreatedAt,
 		UpdatedAt: taskModel.UpdatedAt,
 	}
@@ -124,12 +124,4 @@ func (r *TaskRepositoryGorm) ChangePriority(taskID string, priorityID int) error
 		return err
 	}
 	return nil
-}
-
-// ------------------- Helper ---------------------
-func derefTime(t *time.Time) time.Time {
-	if t != nil {
-		return *t
-	}
-	return time.Time{}
 }

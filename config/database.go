@@ -2,6 +2,7 @@ package config
 
 import (
 	authGormModels "short-go/internal/auth/infrastructure/persistence/gorm"
+	shortenerGormModels "short-go/internal/short-links/infrastructure/persistence/gorm"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -17,12 +18,12 @@ func InitDatabase(dns string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-
 	// AutoMigrate: Crear tablas automáticamente
 	if err := db.AutoMigrate(
 		&authGormModels.UserModel{},
 		&authGormModels.SessionModel{},
 
+		&shortenerGormModels.ShortLinkModel{},
 	); err != nil {
 		return nil, err
 	}
@@ -30,9 +31,8 @@ func InitDatabase(dns string) (*gorm.DB, error) {
 	return db, nil
 }
 
+// func seedTaskCatalogs(db *gorm.DB) error {
+// 	// Aquí se agrega los datos estáticos iniciales de claves foráneas si es necesario
 
-func seedTaskCatalogs(db *gorm.DB) error {
-	// Aquí se agrega los datos estáticos iniciales de claves foráneas si es necesario
-
-	return nil
-}
+// 	return nil
+// }

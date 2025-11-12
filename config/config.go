@@ -8,7 +8,8 @@ import (
 
 type Config struct {
 	Port                 string
-	DatabaseUrl               string
+	Domain               string
+	DatabaseUrl          string
 	JWTSecret            string
 	JWTAccessExpiration  string
 	JWTRefreshExpiration string
@@ -17,13 +18,19 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	godotenv.Load()
 
+	domain := getEnv("PROD_URL", "")
+	if getEnv("DEV_MODE", "") == "dev" {
+		domain = getEnv("DEV_URL", "")
+	}
+
 	return &Config{
-		Port: getEnv("PORT", "8080"),
-		DatabaseUrl: getEnv("DATABASE_URL", ""),
-		JWTSecret: getEnv("JWT_SECRET", "super-secret-key"),
-		JWTAccessExpiration: getEnv("JWT_ACCESS_EXPIRATION", "1h"),
+		Port:                 getEnv("PORT", "8080"),
+		Domain:               domain,
+		DatabaseUrl:          getEnv("DATABASE_URL", ""),
+		JWTSecret:            getEnv("JWT_SECRET", "super-secret-key"),
+		JWTAccessExpiration:  getEnv("JWT_ACCESS_EXPIRATION", "1h"),
 		JWTRefreshExpiration: getEnv("JWT_REFRESH_EXPIRATION", "7d"),
-	} , nil
+	}, nil
 }
 
 func getEnv(key, defaultValue string) string {

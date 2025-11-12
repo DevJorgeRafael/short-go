@@ -25,6 +25,28 @@ func NewAuthMiddleware(jwtSecret string, sessionRepo repository.SessionRepositor
 
 // RequireAuth valida el JWT y extrae el userId
 func (m *AuthMiddleware) RequireAuth(next http.Handler) http.Handler {
+	return validateToken(m, next)
+}
+
+// OptionalAuth intenta validar el JWT si está presente y extrae el userId
+// Si existe y el token es inválido, retorna un error 401
+func (m *AuthMiddleware) OptionalAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+
+		// No envió el token, es anónimo -> continua
+		if authHeader == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Valida el token 
+		validateToken(m, next).ServeHTTP(w, r)
+	})
+}
+
+// Función compartida para manejar la validación del token
+func validateToken(m *AuthMiddleware, next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
