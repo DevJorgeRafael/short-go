@@ -2,6 +2,8 @@ package service
 
 import (
 	"errors"
+	"fmt"
+	"math/rand"
 	"regexp"
 	"short-go/internal/auth/domain/model"
 	"short-go/internal/auth/domain/repository"
@@ -19,19 +21,30 @@ var (
 	ErrInvalidPassword    = errors.New("la contraseña debe tener al menos 8 caracteres")
 	ErrUserNotFound       = errors.New("usuario no encontrado")
 	ErrInvalidCredentials = errors.New("credenciales inválidas")
+
+	ErrResetCodeNotFound = errors.New("código de reseteo inválido o email incorrecto")
+	ErrResetCodeExpired  = errors.New("el código de reseteo ha expirado")
 )
 
 type AuthService struct {
 	userRepo    repository.UserRepository
 	sessionRepo repository.SessionRepository
 	jwtSecret   string
+
+	emailService EmailService
 }
 
-func NewAuthService(userRepo repository.UserRepository, sessionRepo repository.SessionRepository, jwtSecret string) *AuthService {
+func NewAuthService(
+	userRepo repository.UserRepository, 
+	sessionRepo repository.SessionRepository, 
+	jwtSecret string,
+	emailService EmailService,
+	) *AuthService {
 	return &AuthService{
 		userRepo:    userRepo,
 		sessionRepo: sessionRepo,
 		jwtSecret:   jwtSecret,
+		emailService: emailService,
 	}
 }
 
@@ -163,6 +176,79 @@ func (s *AuthService) RefreshToken(refreshToken string) (newAccessToken string, 
 
 func (s *AuthService) GetActiveSessions(userId string) ([]*model.Session, error) {
 	return s.sessionRepo.FindActiveByUserID(userId)
+}
+
+func (s *AuthService) ForgotPassword(email string) error {
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil || user == nil {
+		return nil
+	}
+
+	code := fmt.Sprintf("%06d", rand.Intn(1000000))
+
+	hashedCode, err := bcrypt.GenerateFromPassword([]byte(code), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("error al hashear el código de reseteo: %w", err)
+	}
+
+	tokenString := string(hashedCode)
+	expiresAt := time.Now().Add(10 * time.Minute)
+
+	user.ResetPasswordToken = &tokenString
+	user.ResetPasswordExpiresAt = &expiresAt
+
+	if err := s.userRepo.Update(user); err != nil {
+		return fmt.Errorf("error al actualizar el usuario con el código de reseteo: %w", err)
+	}
+
+	if err := s.emailService.SendPasswordResetCode(user.Email, code); err != nil {
+		return fmt.Errorf("error al enviar el email de reseteo: %w", err)
+	}
+
+	return nil
+}
+
+func (s *AuthService) ResetPassword(email, code, newPassword string) error {
+	if len(newPassword) < 8 {
+		return ErrInvalidPassword
+	}
+
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil || user == nil {
+		return ErrResetCodeNotFound
+	}
+
+	if user.ResetPasswordToken == nil || user.ResetPasswordExpiresAt == nil {
+		return ErrResetCodeNotFound
+	}
+
+	if time.Now().After(*user.ResetPasswordExpiresAt) {
+		user.ResetPasswordToken = nil
+		user.ResetPasswordExpiresAt = nil
+		s.userRepo.Update(user)
+		return ErrResetCodeExpired
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.ResetPasswordToken), []byte(code)); err != nil {
+		return ErrResetCodeNotFound
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("error al hashear la nueva contraseña: %w", err)
+	}
+
+	user.Password = string(hashedPassword)
+	user.ResetPasswordToken = nil
+	user.ResetPasswordExpiresAt = nil
+
+	if err := s.userRepo.Update(user); err != nil {
+		return fmt.Errorf("error al actualizar la contraseña del usuario: %w", err)
+	}
+
+	s.sessionRepo.DeleteByUserID(user.ID)
+
+	return nil
 }
 
 // --------------------- Helpers ---------------------

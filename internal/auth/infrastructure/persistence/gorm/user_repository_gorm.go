@@ -47,6 +47,12 @@ func (r *UserRepositoryGorm) FindByEmail(email string) (*model.User, error) {
 		Password: userModel.Password,
 		Name:     userModel.Name,
 		IsActive: userModel.IsActive,
+
+		CreatedAt: userModel.CreatedAt,
+		UpdatedAt: userModel.UpdatedAt,
+
+		ResetPasswordToken: userModel.ResetPasswordToken,
+		ResetPasswordExpiresAt: userModel.ResetPasswordExpiresAt,
 	}
 	return user, nil
 }
@@ -65,6 +71,12 @@ func (r *UserRepositoryGorm) FindByID(id string) (*model.User, error) {
 		Password: userModel.Password,
 		Name:     userModel.Name,
 		IsActive: userModel.IsActive,
+
+		ResetPasswordToken: userModel.ResetPasswordToken,
+		ResetPasswordExpiresAt: userModel.ResetPasswordExpiresAt,
+
+		CreatedAt: userModel.CreatedAt,
+		UpdatedAt: userModel.UpdatedAt,
 	}
 
 	return user, nil
@@ -78,6 +90,12 @@ func (r *UserRepositoryGorm) Update(user *model.User) error {
 		Password: user.Password,
 		Name:     user.Name,
 		IsActive: user.IsActive,
+
+		ResetPasswordToken: user.ResetPasswordToken,
+		ResetPasswordExpiresAt: user.ResetPasswordExpiresAt,
+
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 
 	// db.Save(&userModel)

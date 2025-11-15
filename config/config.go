@@ -13,6 +13,8 @@ type Config struct {
 	JWTSecret            string
 	JWTAccessExpiration  string
 	JWTRefreshExpiration string
+	EmailsAPIKey         string
+	SenderEmail          string
 }
 
 func LoadConfig() (*Config, error) {
@@ -30,6 +32,8 @@ func LoadConfig() (*Config, error) {
 		JWTSecret:            getEnv("JWT_SECRET", "super-secret-key"),
 		JWTAccessExpiration:  getEnv("JWT_ACCESS_EXPIRATION", "1h"),
 		JWTRefreshExpiration: getEnv("JWT_REFRESH_EXPIRATION", "7d"),
+		EmailsAPIKey:         getEnv("EMAILS_API_KEY", ""),
+		SenderEmail:          getEnv("SENDER_EMAIL", ""),
 	}, nil
 }
 

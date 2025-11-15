@@ -10,6 +10,9 @@ type UserModel struct {
 	IsActive  bool      `gorm:"default:true"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+
+	ResetPasswordToken	 *string    `gorm:"type:text;index"`
+	ResetPasswordExpiresAt *time.Time
 }
 
 func (UserModel) TableName() string {

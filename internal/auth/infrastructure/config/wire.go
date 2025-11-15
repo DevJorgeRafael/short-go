@@ -2,6 +2,7 @@ package config
 
 import (
 	"short-go/internal/auth/application/service"
+	"short-go/internal/auth/infrastructure/email"
 	"short-go/internal/auth/infrastructure/http/handler"
 	gormRepo "short-go/internal/auth/infrastructure/persistence/gorm"
 	"short-go/internal/shared/infrastructure/middleware"
@@ -14,13 +15,14 @@ type AuthModule struct {
 	Handler *handler.AuthHandler
 }
 
-func NewAuthModule(db *gorm.DB, jwtSecre string) *AuthModule {
+func NewAuthModule(db *gorm.DB, jwtSecret string, emailsApiKey string, senderEmail string) *AuthModule {
 	// Repositories
 	userRepo := gormRepo.NewUserRepository(db)
 	sessionRepo := gormRepo.NewSessionRepository(db)
 
 	// Services
-	authService := service.NewAuthService(userRepo, sessionRepo, jwtSecre)
+	emailService := email.NewBrevoEmailService(emailsApiKey, senderEmail)
+	authService := service.NewAuthService(userRepo, sessionRepo, jwtSecret, emailService)
 
 	// Handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -37,6 +39,11 @@ func (m *AuthModule) RegisterRoutes(r chi.Router, authMiddleware *middleware.Aut
 		r.Post("/register", m.Handler.Register)
 		r.Post("/login", m.Handler.Login)
 		r.Post("/refresh", m.Handler.RefreshToken)
+
+		// Reset-password
+		r.Post("/forgot-password", m.Handler.ForgotPassword)
+		r.Post("/reset-password", m.Handler.ResetPassword)
+
 
 		// Rutas protegidas (requiren JWT)
 		r.Group(func(r chi.Router) {

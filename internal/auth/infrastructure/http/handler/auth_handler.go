@@ -42,6 +42,16 @@ type AuthResponse struct {
 	Message      string      `json:"message"`
 }
 
+type ForgotPasswordRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type ResetPasswordRequest struct {
+	Email       string `json:"email" validate:"required,email"`
+	Code        string `json:"code" validate:"required,len=6"`
+	NewPassword string `json:"newPassword" validate:"required,min=8"`
+}
+
 // Register - POST /api/auth/register
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
@@ -155,4 +165,56 @@ func (h *AuthHandler) GetSessions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sharedhttp.SuccessResponse(w, http.StatusOK, sessions)
+}
+
+
+// ForgotPassword - POST /api/auth/forgot-password
+func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var req ForgotPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		sharedhttp.ErrorResponse(w, http.StatusBadRequest, "JSON inválido")
+		return
+	}
+
+	if err := h.validator.Struct(req); err != nil {
+		sharedhttp.ErrorResponse(w, http.StatusBadRequest, format.FormatValidationError(err))
+		return
+	}
+
+	if err := h.authService.ForgotPassword(req.Email); err != nil {
+		sharedhttp.ErrorResponse(w, http.StatusInternalServerError, "Error al procesar la solicitud")
+		return
+	}
+
+	msg := "Si el email está registrado, recibirás un código de recuperación."
+	sharedhttp.SuccessResponse(w, http.StatusOK, map[string]string{"message": msg})
+}
+
+// ResetPassword - POST /api/auth/reset-password
+func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req ResetPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		sharedhttp.ErrorResponse(w, http.StatusBadRequest, "JSON inválido")
+		return
+	}
+
+	if err := h.validator.Struct(req); err != nil {
+		sharedhttp.ErrorResponse(w, http.StatusBadRequest, format.FormatValidationError(err))
+		return
+	}
+
+	if err := h.authService.ResetPassword(req.Email, req.Code, req.NewPassword); err != nil {
+		status := http.StatusInternalServerError
+
+		if err == service.ErrInvalidPassword {
+			status = http.StatusBadRequest
+		} else if err == service.ErrResetCodeNotFound || err == service.ErrResetCodeExpired {
+			status = http.StatusUnauthorized
+		}
+
+		sharedhttp.ErrorResponse(w, status, err.Error())
+		return
+	}
+
+	sharedhttp.SuccessResponse(w, http.StatusOK, map[string]string{"message": "Contraseña restablecida exitosamente"})
 }

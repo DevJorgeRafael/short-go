@@ -34,7 +34,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	analyticsService := analyticsService.NewAnalyticsService(clickRepo, linkRepo)
 
 	return &Container{
-		AuthModule:      authConfig.NewAuthModule(db, cfg.JWTSecret),
+		AuthModule:      authConfig.NewAuthModule(db, cfg.JWTSecret, cfg.EmailsAPIKey, cfg.SenderEmail),
 		AuthMiddleware:  middleware.NewAuthMiddleware(cfg.JWTSecret, sessionRepo),
 		ShortenerModule: shortenerConfig.NewShortenerModule(db, cfg, analyticsService),
 		QRModule:        qrConfig.NewQRModule(cfg),
