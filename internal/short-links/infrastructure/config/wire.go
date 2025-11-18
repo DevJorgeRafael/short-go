@@ -33,12 +33,9 @@ func NewShortenerModule(db *gorm.DB, cfg *config.Config, analyticsService *analy
 
 // RegisterRoutes registra las rutas del módulo shortener
 func (m *ShortenerModule) RegisterRoutes(r chi.Router, authMiddleware *middleware.AuthMiddleware) {
-	// 1. Rutas de la API (Creación)
     r.Route("/api/short-links", func(r chi.Router) {
 		r.With(authMiddleware.OptionalAuth).Post("/", m.Handler.CreateShortLink)
 	})
 
-    // 2. Ruta de Redirección (RAÍZ)
-    // Esta captura "localhost:8080/{code}"
     r.Get("/{code}", m.Handler.Redirect)
 }
