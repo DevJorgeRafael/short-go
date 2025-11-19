@@ -1,63 +1,90 @@
-# Go Task Easy List
+# Short Go
 
-API REST para gestión de tareas con autenticación JWT y sesiones, construida con Go siguiendo principios de Clean Architecture.
+API REST para acortar enlaces, generar códigos QR y visualizar analíticas, construida con Go siguiendo principios de Clean Architecture y Arquitectura Modular.
 
 ## 🚀 Características
 
 - ✅ Autenticación con JWT (Access + Refresh tokens)
-- 🔐 Gestión de sesiones activas
-- 📝 CRUD completo de tareas
-- 🎯 Sistema de prioridades (Baja, Media, Alta)
-- 📊 Estados de tareas (Pendiente, En Progreso, Completada)
-- 🏗️ Clean Architecture (Domain, Application, Infrastructure)
-- 🗄️ SQLite con GORM
+- 🔐 Gestión de sesiones activas y recuperación de contraseña vía Email
+- 🔗 Acortador de URLs con redirección eficiente
+- 📊 Sistema de analíticas y rastreo de clicks
+- 📱 Generación de códigos QR dinámicos
+- 🏗️ Arquitectura Modular (Auth, ShortLinks, Analytics, QR)
+- 🗄️ PostgreSQL con GORM
 - ✔️ Validación de datos con go-playground/validator
 
 ## 📁 Estructura del Proyecto
 ```
-go-task-easy-list/
+short-go/
 ├── config/                      # Configuración global
 │   ├── config.go               # Variables de entorno
-│   └── database.go             # Conexión a BD
+│   └── database.go             # Conexión a BD y GORM AutoMigrate
 ├── internal/
-│   ├── auth/                   # Módulo de autenticación
+│   ├── analytics/               # Módulo de analíticas
 │   │   ├── application/
-│   │   │   └── service/        # Lógica de negocio
+│   │   │   └── service/        # Lógica de registro de clicks
 │   │   ├── domain/
-│   │   │   ├── model/          # Entidades
+│   │   │   ├── model/          # Entidades (Click)
 │   │   │   └── repository/     # Interfaces
 │   │   └── infrastructure/
-│   │       ├── config/         # Wire/DI
+│   │       ├── config/         # Wire/DI del módulo
 │   │       ├── http/handler/   # Controllers
-│   │       └── persistence/    # Implementación repos
-│   ├── tasks/                  # Módulo de tareas
+│   │       └── persistence/    # Implementación GORM
+│   ├── auth/                    # Módulo de autenticación
 │   │   ├── application/
+│   │   │   └── service/        # Lógica de login/register
 │   │   ├── domain/
+│   │   │   ├── model/          # Entidades (User, Session)
+│   │   │   └── repository/     # Interfaces
 │   │   └── infrastructure/
-│   └── shared/                 # Código compartido
+│   │       ├── config/         # Wire/DI del módulo
+│   │       ├── email/          # Servicio de envío (Brevo)
+│   │       ├── http/handler/   # Controllers
+│   │       └── persistence/    # Implementación GORM
+│   ├── qr/                      # Módulo de códigos QR
+│   │   └── infrastructure/
+│   │       ├── config/         # Wire/DI del módulo
+│   │       └── http/handler/   # Generador de imágenes QR
+│   ├── short-links/             # Módulo de acortador
+│   │   ├── application/
+│   │   │   └── service/        # Lógica de creación/redirección
+│   │   ├── domain/
+│   │   │   ├── model/          # Entidades (ShortLink)
+│   │   │   └── repository/     # Interfaces
+│   │   └── infrastructure/
+│   │       ├── config/         # Wire/DI del módulo
+│   │       ├── http/handler/   # Controllers
+│   │       └── persistence/    # Implementación GORM
+│   └── shared/                  # Código compartido
 │       ├── context/            # Context helpers
-│       ├── http/               # Response handlers
-│       ├── infrastructure/     # Middleware, DI
-│       └── validation/         # Validadores
-└── migrations/
-    └── schema.sql              # Schema de BD
+│       ├── http/               # Response helpers
+│       ├── infrastructure/     # Container DI y Middleware
+│       └── validation/         # Validadores personalizados
+├── .env                        # Variables de entorno (local)
+├── .env.template               # Plantilla de variables
+├── go.mod                      # Dependencias
+└── main.go                     # Entry point
 ```
 
 ## 🛠️ Tecnologías
 
-- **Go 1.23+**
-- **Chi** - Router HTTP
-- **GORM** - ORM
-- **SQLite** - Base de datos
-- **JWT** - Autenticación
-- **Validator** - Validación de datos
+- **Go 1.25+**
+- **Chi v5** - Router HTTP ligero y rápido
+- **GORM** - ORM robusto para Go
+- **PostgreSQL** - Base de datos relacional
+- **JWT v5** - Autenticación y seguridad
+- **Validator v10** - Validación de datos y estructuras
+- **Go QR Code** - Generación de códigos QR nativa
+- **UUID** - Generación de identificadores únicos
+- **Bcrypt** - Hashing seguro de contraseñas
+- **Godotenv** - Carga de variables de entorno
 
 ## ⚙️ Instalación
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/DevJorgeRafael/go-task-easy-list.git
-cd go-task-easy-list
+git clone [https://github.com/DevJorgeRafael/short-go.git](https://github.com/DevJorgeRafael/short-go.git)
+cd short-go
 ```
 
 ### 2. Instalar dependencias
@@ -67,21 +94,9 @@ go mod download
 
 ### 3. Configurar variables de entorno
 
-Copia `.env.example` y configura tus variables:
+Copia `.env.example` y configura las variables de entorno:
 ```bash
 cp .env.example .env
-```
-```env
-# Server
-PORT=8080
-
-# Database
-DB_PATH=./todo.db
-
-# JWT
-JWT_SECRET=super-secret-key
-JWT_ACCESS_EXPIRATION=1h
-JWT_REFRESH_EXPIRATION=7d
 ```
 
 
@@ -101,73 +116,47 @@ El servidor estará disponible en `http://localhost:8080`
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | POST | `/api/auth/register` | Registrar nuevo usuario |
-| POST | `/api/auth/login` | Iniciar sesión |
-| POST | `/api/auth/refresh` | Renovar access token |
+| POST | `/api/auth/login` | Iniciar sesión (Retorna Access + Refresh Token) |
+| POST | `/api/auth/refresh` | Renovar Access Token |
+| POST | `/api/auth/forgot-password` | Solicitar correo de recuperación de contraseña |
+| POST | `/api/auth/reset-password` | Restablecer contraseña usando token |
 
 #### Rutas Protegidas (requieren JWT)
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/auth/logout` | Cerrar sesión |
-| GET | `/api/auth/sessions` | Listar sesiones activas |
+| POST | `/api/auth/logout` | Cerrar sesión actual |
+| GET | `/api/auth/sessions` | Listar sesiones activas del usuario |
 
-### ✅ Tareas (`/api/tasks`)
-
-Todas las rutas requieren autenticación (Header: `Authorization: Bearer <token>`)
+### 🔗 Short Links
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/tasks` | Crear tarea |
-| GET | `/api/tasks` | Listar todas las tareas del usuario |
-| GET | `/api/tasks/{id}` | Obtener tarea por ID |
-| PUT | `/api/tasks/{id}` | Actualizar tarea |
-| DELETE | `/api/tasks/{id}` | Eliminar tarea |
-| GET | `/api/tasks/by-status/{statusId}` | Filtrar por estado *(próximamente)* |
-| GET | `/api/tasks/by-priority/{priorityId}` | Filtrar por prioridad *(próximamente)* |
+| POST | `/api/short-links` | Crear enlace corto (Auth opcional para asociar al usuario) |
+| GET | `/{code}` | Redireccionar a la URL original (Ruta Raíz) |
 
+### 📊 Analíticas (`/api/stats`)
 
-## 📊 Modelos de Datos
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/stats/{code}` | Obtener estadísticas y contador de clicks |
 
-### Task
-```json
-{
-  "id": "uuid",
-  "title": "string",
-  "description": "string",
-  "statusId": 1,           // 1=Pendiente, 2=En Progreso, 3=Completada
-  "priorityId": 2,         // 1=Baja, 2=Media, 3=Alta
-  "startsAt": "2025-11-10T09:00:00Z",
-  "dueDate": "2025-11-15T18:00:00Z",
-  "createdAt": "2025-11-09T22:00:00Z",
-  "updatedAt": "2025-11-09T22:00:00Z"
-}
-```
+### 📱 Códigos QR (`/api/qr`)
 
-### Estados (task_statuses)
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/qr/{code}` | Generar imagen del código QR para un enlace |
 
-| ID | Code | Name |
-|----|------|------|
-| 1 | PENDING | Pendiente |
-| 2 | IN_PROGRESS | En Progreso |
-| 3 | COMPLETED | Completada |
-
-### Prioridades (task_priorities)
-
-| ID | Code | Name | Level |
-|----|------|------|-------|
-| 1 | LOW | Baja | 1 |
-| 2 | MEDIUM | Media | 2 |
-| 3 | HIGH | Alta | 3 |
 
 ## 🔒 Seguridad
 
-- Contraseñas hasheadas con bcrypt
-- JWT con expiración configurable
-- Refresh tokens para renovación segura
-- Validación de sesiones activas
-- Middleware de autenticación en todas las rutas protegidas
+- **Contraseñas Seguras**: Hasheadas con bcrypt antes de ser almacenadas.
+- **Autenticación JWT**: Implementación de Access Tokens y Refresh Tokens con tiempos de expiración configurables.
+- **Gestión de Sesiones**: Control y validación de sesiones activas en base de datos.
+- **Recuperación de Contraseña**: Envío de códigos vía Email (Brevo API). Por seguridad, los códigos de verificación se guardan hasheados en la base de datos, nunca en texto plano.
+- **Middleware de Protección**: Verificación de autenticación en todas las rutas protegidas.
 
 
 ## 👤 Autor
 
-Jorge Rafael Rosero - Proyecto de aprendizaje Go
+Jorge Rafael Rosero - Acortador de enlaces con Go
