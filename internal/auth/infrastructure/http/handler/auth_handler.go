@@ -254,9 +254,10 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	if err := h.authService.ResetPassword(req.Email, req.Code, req.NewPassword); err != nil {
 		status := http.StatusInternalServerError
 
-		if err == service.ErrInvalidPassword {
+		switch err {
+		case service.ErrInvalidPassword:
 			status = http.StatusBadRequest
-		} else if err == service.ErrResetCodeNotFound || err == service.ErrResetCodeExpired {
+		case service.ErrResetCodeNotFound, service.ErrResetCodeExpired:
 			status = http.StatusUnauthorized
 		}
 
