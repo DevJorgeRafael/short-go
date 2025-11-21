@@ -1,6 +1,6 @@
 # --- ETAPA 1: Build (Usamos la última versión de Go) ---
 # Usamos una etiqueta específica de Alpine reciente para evitar sorpresas
-FROM golang:1.25-alpine3.20 AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
