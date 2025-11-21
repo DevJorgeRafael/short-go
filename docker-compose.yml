@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  app:
+    image: ghcr.io/devjorgerafael/short-go:latest
+    container_name: shortgo-app
+    restart: always
+    env_file: .env
+    networks:
+      - infra_web  # Red de Traefik
+      - internal   # Red privada para DB
+    labels:
+      # Habilitar Traefik
+      - "traefik.enable=true"
+
+      # Especificar la red (importante cuando el contenedor está en múltiples redes)
+      - "traefik.docker.network=infra_web"
+
+      # Router: captura todas las peticiones que empiecen con /shortgo
+      - "traefik.http.routers.shortgo.rule=PathPrefix(`/shortgo`)"
+      - "traefik.http.routers.shortgo.entrypoints=web"
+
+      # Middleware: quita el prefijo /shortgo antes de pasarlo a la app
+      - "traefik.http.middlewares.shortgo-strip.stripprefix.prefixes=/shortgo"
+      - "traefik.http.routers.shortgo.middlewares=shortgo-strip"
+
+      # Service: puerto interno de tu app Go
+      - "traefik.http.services.shortgo.loadbalancer.server.port=8080"  # Ajusta al puerto de tu app
+
+  # Si tienes una base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: shortgo-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-shortgo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-shortgo}
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+
+networks:
+  infra_web:
+    external: true
+  internal:
+    driver: bridge
