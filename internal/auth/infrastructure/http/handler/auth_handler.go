@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"short-go/internal/auth/application/service"
 	sharedContext "short-go/internal/shared/context"
 	sharedhttp "short-go/internal/shared/http"
@@ -13,14 +14,19 @@ import (
 )
 
 type AuthHandler struct {
-	authService *service.AuthService
-	validator   *validator.Validate
+	authService   *service.AuthService
+	validator     *validator.Validate
+	isDevelopment bool
 }
 
 func NewAuthHandler(authService *service.AuthService) *AuthHandler {
+	// Detectar si estamos en desarrollo
+	isDev := os.Getenv("ENVIRONMENT") != "production"
+	
 	return &AuthHandler{
-		authService: authService,
-		validator:   sharedValidation.NewValidator(),
+		authService:   authService,
+		validator:     sharedValidation.NewValidator(),
+		isDevelopment: isDev,
 	}
 }
 
@@ -36,10 +42,8 @@ type LoginRequest struct {
 }
 
 type AuthResponse struct {
-	User         interface{} `json:"user"`
-	AccessToken  string      `json:"accessToken"`
-	RefreshToken string      `json:"refreshToken"`
-	Message      string      `json:"message"`
+	User    interface{} `json:"user"`
+	Message string      `json:"message,omitempty"`
 }
 
 type ForgotPasswordRequest struct {
@@ -50,6 +54,32 @@ type ResetPasswordRequest struct {
 	Email       string `json:"email" validate:"required,email"`
 	Code        string `json:"code" validate:"required,len=6"`
 	NewPassword string `json:"newPassword" validate:"required,min=8"`
+}
+
+// setCookie es un helper para establecer cookies con la configuración correcta
+func (h *AuthHandler) setCookie(w http.ResponseWriter, name, value string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     "/",
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   !h.isDevelopment, // Solo HTTPS en producción
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+
+// deleteCookie elimina una cookie
+func (h *AuthHandler) deleteCookie(w http.ResponseWriter, name string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   !h.isDevelopment,
+		SameSite: http.SameSiteStrictMode,
+	})
 }
 
 // Register - POST /api/auth/register
@@ -92,23 +122,25 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Establecer cookies
+	h.setCookie(w, "accessToken", accessToken, 3600)        // 1 hora
+	h.setCookie(w, "refreshToken", refreshToken, 2592000)   // 30 días
+
 	message := ""
 	if sessionRemoved {
 		message = "Se cerró tu sesión más antigua porque alcanzaste el límite de 3 sesiones activas."
 	}
 
 	response := AuthResponse{
-		User:         user,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		Message:      message,
+		User:    user,
+		Message: message,
 	}
 
 	sharedhttp.SuccessResponse(w, http.StatusOK, response)
 }
 
+// Logout - POST /api/auth/logout
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	// Extraer userId del contexto (establecido por el middleware)
 	userID := sharedContext.GetUserID(r.Context())
 
 	if err := h.authService.Logout(userID); err != nil {
@@ -116,39 +148,56 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Eliminar cookies
+	h.deleteCookie(w, "accessToken")
+	h.deleteCookie(w, "refreshToken")
+
 	sharedhttp.SuccessResponse(w, http.StatusOK, map[string]string{"message": "Sesión cerrada exitosamente"})
 }
 
-// ---------------------------- Refresh Token ---------------------------- //
+// RefreshToken - POST /api/auth/refresh
 type RefreshRequest struct {
-	RefreshRequest string `json:"refreshToken" validate:"required"`
+	RefreshToken string `json:"refreshToken" validate:"required"`
 }
 
 type RefreshResponse struct {
-	AccessToken string `json:"accessToken"`
+	AccessToken string `json:"accessToken,omitempty"`
+	Message     string `json:"message,omitempty"`
 }
 
-// RefreshToken - POST /api/auth/refresh
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	var req RefreshRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sharedhttp.ErrorResponse(w, http.StatusBadRequest, "JSON inválido")
+	// Intentar obtener refresh token desde cookie primero
+	refreshToken := ""
+	
+	cookie, err := r.Cookie("refreshToken")
+	if err == nil {
+		refreshToken = cookie.Value
+	} else {
+		// Si no hay cookie, intentar desde el body
+		var req RefreshRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			sharedhttp.ErrorResponse(w, http.StatusBadRequest, "JSON inválido")
+			return
+		}
+		refreshToken = req.RefreshToken
+	}
+
+	if refreshToken == "" {
+		sharedhttp.ErrorResponse(w, http.StatusBadRequest, "Refresh token requerido")
 		return
 	}
 
-	if err := h.validator.Struct(req); err != nil {
-		sharedhttp.ErrorResponse(w, http.StatusBadRequest, format.FormatValidationError(err))
-		return
-	}
-
-	accessToken, err := h.authService.RefreshToken(req.RefreshRequest)
+	accessToken, err := h.authService.RefreshToken(refreshToken)
 	if err != nil {
 		sharedhttp.ErrorResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
+	// Actualizar cookie de access token
+	h.setCookie(w, "accessToken", accessToken, 3600)
+
 	response := RefreshResponse{
-		AccessToken: accessToken,
+		Message: "Token actualizado exitosamente",
 	}
 
 	sharedhttp.SuccessResponse(w, http.StatusOK, response)
@@ -166,7 +215,6 @@ func (h *AuthHandler) GetSessions(w http.ResponseWriter, r *http.Request) {
 
 	sharedhttp.SuccessResponse(w, http.StatusOK, sessions)
 }
-
 
 // ForgotPassword - POST /api/auth/forgot-password
 func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
