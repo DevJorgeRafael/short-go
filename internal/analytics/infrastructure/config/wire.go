@@ -5,6 +5,7 @@ import (
 	"short-go/internal/analytics/infrastructure/http/handler"
 	gormAnalyticsRepo "short-go/internal/analytics/infrastructure/persistence/gorm"
 	shortLinkRepo "short-go/internal/short-links/domain/repository"
+	"short-go/internal/shared/infrastructure/middleware"
 
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
@@ -30,8 +31,9 @@ func NewAnalyticsModule(db *gorm.DB, linkRepo shortLinkRepo.ShortLinkRepository)
 }
 
 // RegisterRoutes registra las rutas del módulo analytics
-func (m *AnalyticsModule) RegisterRoutes(r chi.Router) {
+func (m *AnalyticsModule) RegisterRoutes(r chi.Router, authMiddleware *middleware.AuthMiddleware) {
 	r.Route("/api/stats", func(r chi.Router) {
+		r.Use(authMiddleware.OptionalAuth)
 		r.Get("/{code}", m.Handler.GetStats)
 	})
 }

@@ -47,5 +47,5 @@ func (c *Container) RegisterRoutes(r chi.Router) {
 	c.AuthModule.RegisterRoutes(r, c.AuthMiddleware)
 	c.ShortenerModule.RegisterRoutes(r, c.AuthMiddleware)
 	c.QRModule.RegisterRoutes(r)
-	c.AnalyticsModule.RegisterRoutes(r)
+	c.AnalyticsModule.RegisterRoutes(r, c.AuthMiddleware)
 }

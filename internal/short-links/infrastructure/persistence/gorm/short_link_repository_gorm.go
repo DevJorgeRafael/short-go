@@ -1,8 +1,10 @@
 package gorm
 
 import (
-	"short-go/internal/short-links/domain/model"
+	"errors"
 	derefUtils "short-go/internal/shared/http/utils"
+	"short-go/internal/short-links/domain/model"
+
 	"gorm.io/gorm"
 )
 
@@ -34,9 +36,15 @@ func (r *ShortLinkRepositoryGorm) Create(shortLink *model.ShortLink) error {
 
 func (r *ShortLinkRepositoryGorm) FindByCode(code string) (*model.ShortLink, error) {
 	var shortLinkModel ShortLinkModel
-	if err := r.db.Where("code = ?", code).Find(&shortLinkModel).Error; err != nil {
-		return nil, err
-	}
+
+    result := r.db.Where("code = ?", code).First(&shortLinkModel)
+    
+    if result.Error != nil {
+        if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+            return nil, result.Error
+        }
+        return nil, result.Error
+    }
 	
 	shortLink := &model.ShortLink{
 		Code: shortLinkModel.Code,
